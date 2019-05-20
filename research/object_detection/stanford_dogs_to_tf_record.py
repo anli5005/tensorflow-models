@@ -29,8 +29,8 @@ def create_tf_example(example):
     ymins = [int(bndbox.find("ymin").text) / height] # List of normalized top y coordinates in bounding box (1 per box)
     ymaxs = [int(bndbox.find("ymax").text) / height] # List of normalized bottom y coordinates in bounding box
     # (1 per box)
-    classes_text = [] # List of string class name of bounding box (1 per box)
-    classes = [] # List of integer class id of bounding box (1 per box)
+    classes_text = [obj.find("name").text] # List of string class name of bounding box (1 per box)
+    classes = [int(annotation.find("folder"))] # List of integer class id of bounding box (1 per box)
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
