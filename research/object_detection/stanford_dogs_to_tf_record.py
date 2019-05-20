@@ -14,17 +14,20 @@ def create_tf_example(example):
 
     size = annotation.find("size")
 
-    height = size.find("height").text # Image height
-    width = size.find("width").text # Image width
-    filename = annotation.find("filename").text + ".jpg" # Filename of the image. Empty if image is not from file
+    height = int(size.find("height").text) # Image height
+    width = int(size.find("width").text) # Image width
+    filename = annotation.find("filename").text + ".jpg" # Filename of the size.image. Empty if image is not from file
     encoded_image_data = None # Encoded image bytes
     image_format = "jpeg" # b'jpeg' or b'png'
 
-    xmins = [] # List of normalized left x coordinates in bounding box (1 per box)
-    xmaxs = [] # List of normalized right x coordinates in bounding box
+    obj = annotation.find("object")
+    bndbox = obj.find("bndbox")
+
+    xmins = [int(bndbox.find("xmin").text) / width] # List of normalized left x coordinates in bounding box (1 per box)
+    xmaxs = [int(bndbox.find("xmax").text) / width] # List of normalized right x coordinates in bounding box
     # (1 per box)
-    ymins = [] # List of normalized top y coordinates in bounding box (1 per box)
-    ymaxs = [] # List of normalized bottom y coordinates in bounding box
+    ymins = [int(bndbox.find("ymin").text) / height] # List of normalized top y coordinates in bounding box (1 per box)
+    ymaxs = [int(bndbox.find("ymax").text) / height] # List of normalized bottom y coordinates in bounding box
     # (1 per box)
     classes_text = [] # List of string class name of bounding box (1 per box)
     classes = [] # List of integer class id of bounding box (1 per box)
@@ -51,7 +54,7 @@ def main(_):
 
     annotations_path = os.path.join(os.getcwd(), "annotations")
     paths = (os.path.join(annotations_path, name) for name in os.listdir(annotations_path))
-    examples = ((os.path.join(path, name) for name in os.listdir(path)) for path in paths)
+    examples = (os.path.join(path, name) for path in paths for name in os.listdir(path))
 
     for example in examples:
         tf_example = create_tf_example(example)
