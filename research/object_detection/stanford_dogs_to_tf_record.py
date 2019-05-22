@@ -17,8 +17,10 @@ def create_tf_example(example):
     height = int(size.find("height").text) # Image height
     width = int(size.find("width").text) # Image width
     filename = annotation.find("filename").text + ".jpg" # Filename of the size.image. Empty if image is not from file
+    if filename == "%s.jpg":
+        return None
     encoded_image_data = None # Encoded image bytes
-    image_format = "jpeg" # b'jpeg' or b'png'
+    image_format = b"jpeg" # b'jpeg' or b'png'
 
     obj = annotation.find("object")
     bndbox = obj.find("bndbox")
@@ -32,18 +34,21 @@ def create_tf_example(example):
     classes_text = [obj.find("name").text] # List of string class name of bounding box (1 per box)
     classes = [int(annotation.find("folder").text)] # List of integer class id of bounding box (1 per box)
 
+    with open("images\\n{}-{}\\{}".format(annotation.find("folder").text, classes_text[0], filename), "rb") as f:
+        encoded_image_data = b"".join(f.readlines())
+
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
         'image/width': dataset_util.int64_feature(width),
-        'image/filename': dataset_util.bytes_feature(filename),
-        'image/source_id': dataset_util.bytes_feature(filename),
+        'image/filename': dataset_util.bytes_feature(bytes(filename, "UTF-8")),
+        'image/source_id': dataset_util.bytes_feature(bytes(filename, "UTF-8")),
         'image/encoded': dataset_util.bytes_feature(encoded_image_data),
         'image/format': dataset_util.bytes_feature(image_format),
         'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
         'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
         'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
         'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
-        'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
+        'image/object/class/text': dataset_util.bytes_list_feature([bytes(x, "UTF-8") for x in classes_text]),
         'image/object/class/label': dataset_util.int64_list_feature(classes),
     }))
     return tf_example
@@ -58,6 +63,8 @@ def main(_):
 
     for example in examples:
         tf_example = create_tf_example(example)
+        if tf_example is None:
+            continue
         writer.write(tf_example.SerializeToString())
 
     writer.close()
