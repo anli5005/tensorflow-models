@@ -38,7 +38,7 @@ def create_tf_example(example):
     else:
         classes = annotation.find("folder").text # List of integer class id of bounding box (1 per box)
 
-    with open("images\\n{}-{}\\{}".format(classes, classes_text[0], filename), "rb") as f:
+    with open(os.path.join("images", "n" + classes + "-" + classes_text[0], filename), "rb") as f:
         encoded_image_data = b"".join(f.readlines())
 
     classes = [int(bytes(classes, "UTF-8"))]
