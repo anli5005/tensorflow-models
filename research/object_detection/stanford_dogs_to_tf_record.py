@@ -18,7 +18,7 @@ def create_tf_example(example):
     width = int(size.find("width").text) # Image width
     filename = annotation.find("filename").text + ".jpg" # Filename of the size.image. Empty if image is not from file
     if filename == "%s.jpg":
-        return None
+        filename = os.path.basename(example) + ".jpg"
     encoded_image_data = None # Encoded image bytes
     image_format = b"jpeg" # b'jpeg' or b'png'
 
@@ -32,10 +32,16 @@ def create_tf_example(example):
     ymaxs = [int(bndbox.find("ymax").text) / height] # List of normalized bottom y coordinates in bounding box
     # (1 per box)
     classes_text = [obj.find("name").text] # List of string class name of bounding box (1 per box)
-    classes = [int(annotation.find("folder").text)] # List of integer class id of bounding box (1 per box)
 
-    with open("images\\n{}-{}\\{}".format(annotation.find("folder").text, classes_text[0], filename), "rb") as f:
+    if annotation.find("folder").text == "%s":
+        classes = os.path.basename(example).split("_")[0][1:]
+    else:
+        classes = annotation.find("folder").text # List of integer class id of bounding box (1 per box)
+
+    with open("images\\n{}-{}\\{}".format(classes, classes_text[0], filename), "rb") as f:
         encoded_image_data = b"".join(f.readlines())
+
+    classes = [int(bytes(classes, "UTF-8"))]
 
     tf_example = tf.train.Example(features=tf.train.Features(feature={
         'image/height': dataset_util.int64_feature(height),
