@@ -105,3 +105,5 @@ research/images/
 research/pycocotools
 research/object_detection/protos/*.py
 research/object_detection/ssd_mobilenet_*
+
+research/object_detection/tf_record_thing
